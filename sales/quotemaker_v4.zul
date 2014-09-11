@@ -803,10 +803,10 @@ border-top: none; border-left: none; border-right: none; border-bottom: none;
 
 popColdCallContacts_combo(imcust_cb);
 
-qtmetaform = dynamicForm(qtmetaform_holder, "qtmetaform_grid", "21");
+qtmetaform = dynamicForm(qtmetaform_holder, "qtmetaform_grid", "3");
 qt_customer_sector.addEventListener("onSelect", new custsectorlb_onSelect());
 
-qtitemsform = dynamicForm(qtitemform_holder, "qtitemform_grid", "22");
+qtitemsform = dynamicForm(qtitemform_holder, "qtitemform_grid", "4");
 
 //populateDivisionColumn(division_column);
 populateQTcreator(quotemaker_user_lb); quotemaker_user_lb.setSelectedIndex(0);

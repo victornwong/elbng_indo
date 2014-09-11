@@ -78,12 +78,8 @@ myincludeid = Executions.getCurrent().getParameter("myid");
 useraccessobj = sechand.getUserAccessObject();
 if(useraccessobj == null) Executions.sendRedirect(MAINLOGIN_PAGE);
 
-kiboo = new Generals();
-sqlhand = new SqlFuncs();
-lbhand = new ListboxHandler();
-guihand = new GuiFuncs();
-samphand = new SampleReg();
-luhand = new LookupFuncs();
+kiboo = new Generals(); sqlhand = new SqlFuncs(); lbhand = new ListboxHandler();
+guihand = new GuiFuncs(); samphand = new SampleReg(); luhand = new LookupFuncs();
 
 // 03/04/2012: uses Lookups table instead of hardcoded
 //String[] desiredTAT = { "7" , "3" , "1", "14", "21", "30" };
@@ -949,7 +945,8 @@ void importCOC()
 <zscript>
 <![CDATA[
 
-cashmetaform = dynamicForm(cashacctmetaform_holder, "cashmetaform_grid", "23");
+
+cashmetaform = dynamicForm(cashacctmetaform_holder, "cashmetaform_grid", "2");
 
 luhand.populateListbox_ByLookup(disposaldate_dd,"SAMPREG_DISPPERIOD",2);
 luhand.populateListbox_ByLookup(soil_disposaldate_dd,"SAMPREG_DISPPERIOD",2);

@@ -771,13 +771,13 @@ void loadStockItems()
 	screcs = sqlhand.gpSqlGetRows(sqlstm);
 	if(screcs.size() == 0) return;
 	//newlb.addEventListener("onSelect", new supplb_onSelect());
+	ArrayList kabom = new ArrayList();
 	for(dpi : screcs)
 	{
-		ArrayList kabom = new ArrayList();
 		kabom.add(dpi.get("stock_code"));
 		kabom.add(kiboo.checkNullString(dpi.get("description")));
-		strarray = kiboo.convertArrayListToStringArray(kabom);	
-		lbhand.insertListItems(newlb,strarray,"false","");
+		lbhand.insertListItems(newlb,kiboo.convertArrayListToStringArray(kabom),"false","");
+		kabom.clear();
 	}
 
 	dc_obj = new stkitem_DClicker();
@@ -1291,8 +1291,7 @@ luhand.populateListbox_ByLookup(pr_priority, "TASKS_PRIORITY",2);
 luhand.populateListbox_ByLookup(pri_curcode, "currencycode",2);
 populate_DeptNumber(pr_dept_number);
 
-// one and only approver for any purchases.. but she's too busy!!! haha..
-// add other approver
+// HARDCODED approvers for PR
 if(useraccessobj.username.equals("doc") || useraccessobj.username.equals("haliza") || useraccessobj.username.equals("intan"))
 {
 	approver_stuff.setVisible(true);

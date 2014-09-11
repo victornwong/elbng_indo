@@ -31,10 +31,10 @@ public class reportModulesObj
 }
 
 // BIRT webviewer location
-BIRT_WEBVIEWER = "http://172.18.107.7:18080/BIRT/frameset?__report=";
-BIRT_WEBVIEWER_SHORT = "/BIRT/frameset?__report=";
+BIRT_WEBVIEWER = "http://192.168.0.5:18080/BIRT_INDO/frameset?__report=";
+BIRT_WEBVIEWER_SHORT = "/BIRT_INDO/frameset?__report=";
 
-EXTERNAL_BIRTVIEWER = "http://172.18.107.15:8080/BIRT/frameset?__report=";
+EXTERNAL_BIRTVIEWER = "http://192.168.0.5:18080/BIRT/frameset?__report=";
 
 FOLDERS_DAILY_REPORT_FILENAME = "DailyFolders_List_v1.rptdesign";
 
