@@ -59,8 +59,7 @@ Object[] samples_lb_headers = {
 		kabom.add(lbhand.trimListitemLabel(d.get("samplemarking"),35));
 		kabom.add(kiboo.checkNullString(d.get("share_sample")));
 		kabom.add(bottl);
-		strarray = kiboo.convertArrayListToStringArray(kabom);
-		lbhand.insertListItems(newlb,strarray,SAMPLES_PREFIX,"");
+		lbhand.insertListItems(newlb,kiboo.convertArrayListToStringArray(kabom),SAMPLES_PREFIX,"");
 		smpcount++;
 		kabom.clear();
 	}
@@ -192,8 +191,7 @@ Object[] folders_lb_headers = {
 		kabom.add(kiboo.checkNullString(d.get("createdby"))); // 13/01/2013: show who own the folder during registration
 		kabom.add(d.get("ar_code"));
 
-		strarray = kiboo.convertArrayListToStringArray(kabom);
-		lbhand.insertListItems(newlb,strarray,"false","");
+		lbhand.insertListItems(newlb,kiboo.convertArrayListToStringArray(kabom),"false","");
 		kabom.clear();
 	}
 	java.io.StringWriter wr = new java.io.StringWriter();

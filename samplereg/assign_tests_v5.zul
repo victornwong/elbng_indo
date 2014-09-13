@@ -13,11 +13,11 @@
 <zscript>
 <![CDATA[
 MYTITLE = "Assign Test Parameters";
-MYVERSION = "v5.0";
+MYVERSION = "iv5.0";
 MYPANEL = "assigntest_panel";
 /*
-Title		: Assign test parameters to LOGGED folders
-Written by	: Victor Wong
+@Title Assign test parameters to LOGGED folders
+@Author Victor Wong
 
 Revisions:
 25/03/2010: added box to allow search on company - instead of just start-date and end-date
@@ -45,7 +45,6 @@ lor = stockrec.get("newfield8")
 selling_price = stockrec.get("selling_price")
 
 02/06/2014: optimize
-
 */
 
 import java.util.*;
@@ -61,13 +60,9 @@ myincludeid = Executions.getCurrent().getParameter("myid");
 useraccessobj = sechand.getUserAccessObject();
 if(useraccessobj == null) Executions.sendRedirect(MAINLOGIN_PAGE);
 
-kiboo = new Generals();
-sqlhand = new SqlFuncs();
-lbhand = new ListboxHandler();
-guihand = new GuiFuncs();
-samphand = new SampleReg();
-luhand = new LookupFuncs();
-testphand = new TestPackageFuncs();
+kiboo = new Generals(); sqlhand = new SqlFuncs(); lbhand = new ListboxHandler();
+guihand = new GuiFuncs(); samphand = new SampleReg(); luhand = new LookupFuncs();
+testphand = new TestPackageFuncs(); dmshand = new DMSFuncs(); NGfuncs ngfun = new NGfuncs();
 
 TestsPanel testspanel;
 
@@ -274,8 +269,7 @@ void startFolderSamplesSearch(Textbox ifolderno)
 	Listbox newlb = lbhand.makeVWListbox_Width(samples_div,whathead,"samples_lb", 5);
 	tlist = sqlhand.gpSqlGetRows(sqlstatem);
 	if(tlist.size() == 0) return;
-	newlb.setRows(22);
-	newlb.setMold("paging");
+	newlb.setRows(20); newlb.setMold("paging");
 	newlb.addEventListener("onSelect", smplbcliker );
 	lncnt = 1;
 	ArrayList kabom = new ArrayList();
@@ -384,7 +378,7 @@ Object[] jobfolders_lb_headers = {
 void startFolderJobsSearch(int itype)
 {
 	sdate = kiboo.getDateFromDatebox(startdate);
-    edate = kiboo.getDateFromDatebox(enddate);
+	edate = kiboo.getDateFromDatebox(enddate);
 	cnm =  kiboo.replaceSingleQuotes(customer_tb.getValue());
 	flst = kiboo.replaceSingleQuotes(byfolder_tb.getValue());
 

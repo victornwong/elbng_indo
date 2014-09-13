@@ -19,11 +19,11 @@
 <zscript>
 <![CDATA[
 MYTITLE = "Samples Registration";
-MYVERSION = "v5.1";
+MYVERSION = "iv5.2";
 MYPANEL = "registernewsamples_panel";
 /*
-Title 		: Register new incoming PO/COC/Samples
-Written by	: Victor Wong
+@Title Register new incoming PO/COC/Samples
+@Author Victor Wong
 
 Revisions/NOTES:
 
@@ -62,6 +62,7 @@ Revisions/NOTES:
 21/06/2013: per-sample share-sample tags
 25/05/2014: some mod to cater for folder-no > 99,999
 11/06/2014: optimize and recoding
+13/09/2014: add ALSI SRA genarator
 
 */
 
@@ -71,6 +72,9 @@ import java.io.*;
 import groovy.sql.Sql;
 import org.zkoss.zk.ui.*;
 import org.zkoss.util.media.AMedia;
+import org.apache.poi.hssf.usermodel.*;
+import org.apache.poi.hssf.util.*;
+import org.apache.poi.ss.util.*;
 import org.victor.*;
 sechand = new SecurityFuncs();
 
@@ -80,6 +84,7 @@ if(useraccessobj == null) Executions.sendRedirect(MAINLOGIN_PAGE);
 
 kiboo = new Generals(); sqlhand = new SqlFuncs(); lbhand = new ListboxHandler();
 guihand = new GuiFuncs(); samphand = new SampleReg(); luhand = new LookupFuncs();
+NGfuncs ngfun = new NGfuncs();
 
 // 03/04/2012: uses Lookups table instead of hardcoded
 //String[] desiredTAT = { "7" , "3" , "1", "14", "21", "30" };
@@ -349,15 +354,19 @@ Object[] lc_headers =
 	lcrecs = sqlhand.gpSqlGetRows(sqlstm);
 	if(lcrecs.size() == 0) return;
 	newlb.setRows(10);
+	ArrayList kabom = new ArrayList();
+	String[] fl = { "origid", "datecreated", "username", "thecomment" };
 	for(dpi : lcrecs)
 	{
-		ArrayList kabom = new ArrayList();
+		ngfun.popuListitems_Data2(kabom,fl,dpi);
+		/*
 		kabom.add(dpi.get("origid").toString());
 		kabom.add(dpi.get("datecreated").toString().substring(0,10));
 		kabom.add(dpi.get("username"));
 		kabom.add(dpi.get("thecomment"));
-		strarray = kiboo.convertArrayListToStringArray(kabom);	
-		lbhand.insertListItems(newlb,strarray,"false","");
+		*/
+		lbhand.insertListItems(newlb,kiboo.convertArrayListToStringArray(kabom),"false","");
+		kabom.clear();
 	}
 }
 
@@ -430,8 +439,7 @@ Object[] qt_headers =
 
 		kabom.add(dpi.get("description"));
 		kabom.add(dpi.get("description2"));
-		strarray = kiboo.convertArrayListToStringArray(kabom);	
-		lbhand.insertListItems(newlb,strarray,"false","");
+		lbhand.insertListItems(newlb,kiboo.convertArrayListToStringArray(kabom),"false","");
 		lncn++;
 		kabom.clear();
 	}
@@ -448,80 +456,79 @@ void importCOC()
 </zscript>
 
 <popup id="addmultisamp_popup">
-<div sclass="shadowbox" style="background:#888a85;" width="300px">
-	<label value="Samples to add" sclass="k9" />
-	<textbox id="addmulti_tb" sclass="k9" />
-	<separator height="3px" />
-	<hbox>
-		<button label="Add" sclass="k9" onClick="createMultiSamples()" />
-		<button label="X Close" sclass="k9" onClick="addmultisamp_popup.close()" />
-	</hbox>
-</div>
+	<div sclass="shadowbox" style="background:#888a85;" width="300px">
+		<label value="Samples to add" sclass="k9" />
+		<textbox id="addmulti_tb" sclass="k9" />
+		<separator height="3px" />
+		<hbox>
+			<button label="Add" sclass="k9" onClick="createMultiSamples()" />
+			<button label="X Close" sclass="k9" onClick="addmultisamp_popup.close()" />
+		</hbox>
+	</div>
 </popup> <!-- ENDOF addmultisamp_popup -->
 
 <popup id="digquotation_popup">
-
-<div sclass="shadowbox" style="background:#1e90ff;" width="500px">
-	<hbox>
-		<label value="QT" sclass="k9" />
-		<textbox id="digquote_tb" sclass="k9" />
-		<button label="Dig" sclass="k9" onClick="digShowQuotation()" />
-		<button label="X Close" sclass="k9" onClick="digquotation_popup.close()" />
-	</hbox>
-	<separator height="3px" />
-	<div id="quotation_workarea" visible="false">
-		<grid>
-			<rows>
-				<row>
-					<label value="Quote Ref#" sclass="k9" />
-					<label id="qt_origid" sclass="k9" />
-					<label value="Dated" sclass="k9" />
-					<label id="qt_datecreated" sclass="k9" />
-				</row>
-				<row spans="1,3">
-					<label value="Customer" sclass="k9" />
-					<label id="qt_customer_name" sclass="k9" />
-				</row>
-				<row>
-					<label value="Quoter" sclass="k9" />
-					<label id="qt_username" sclass="k9" />
-					<label value="Salesperson" sclass="k9" />
-					<label id="qt_salesperson" sclass="k9" />
-				</row>
-			</rows>
-		</grid>
+	<div sclass="shadowbox" style="background:#1e90ff;" width="500px">
+		<hbox>
+			<label value="QT" sclass="k9" />
+			<textbox id="digquote_tb" sclass="k9" />
+			<button label="Dig" sclass="k9" onClick="digShowQuotation()" />
+			<button label="X Close" sclass="k9" onClick="digquotation_popup.close()" />
+		</hbox>
 		<separator height="3px" />
-		<div id="quoteitems_holder" />
+		<div id="quotation_workarea" visible="false">
+			<grid>
+				<rows>
+					<row>
+						<label value="Quote Ref#" sclass="k9" />
+						<label id="qt_origid" sclass="k9" />
+						<label value="Dated" sclass="k9" />
+						<label id="qt_datecreated" sclass="k9" />
+					</row>
+					<row spans="1,3">
+						<label value="Customer" sclass="k9" />
+						<label id="qt_customer_name" sclass="k9" />
+					</row>
+					<row>
+						<label value="Quoter" sclass="k9" />
+						<label id="qt_username" sclass="k9" />
+						<label value="Salesperson" sclass="k9" />
+						<label id="qt_salesperson" sclass="k9" />
+					</row>
+				</rows>
+			</grid>
+			<separator height="3px" />
+			<div id="quoteitems_holder" />
+		</div>
 	</div>
-</div>
 </popup> <!-- ENDOF digquotation_popup -->
 
 <!-- result worksheets management popup -->
 <popup id="doculink_popup">
-<div width="480px" style="padding:3px">
-<include id="linkingdoc_include" src="alsglobal/doculink.zul"/>
-<separator height="3px" />
-<button label="Close" onClick="showDocumentsList(global_selected_folderstr); doculink_popup.close()" sclass="k9" />
-</div>
+	<div width="480px" style="padding:3px">
+		<include id="linkingdoc_include" src="alsglobal/doculink.zul"/>
+		<separator height="3px" />
+		<button label="Close" onClick="showDocumentsList(global_selected_folderstr); doculink_popup.close()" sclass="k9" />
+	</div>
 </popup>
 <!-- end of result worksheets management popup -->
 
 <!-- select customer popup -->
 <popup id="selectcustomer_popup">
-<div sclass="shadowbox" style="background:#2B276E;">
-<hbox>
-	<textbox id="cust_search_tb" width="150px" sclass="k9" />
-	<button label="Find customer" sclass="k9" onClick="searchCustomers()" />
-</hbox>
-<separator height="3px" />
+	<div sclass="shadowbox" style="background:#2B276E;">
+		<hbox>
+			<textbox id="cust_search_tb" width="150px" sclass="k9" />
+			<button label="Find customer" sclass="k9" onClick="searchCustomers()" />
+		</hbox>
+		<separator height="3px" />
 
-<hbox>
-	<div id="foundcustomer_holder" width="300px" />
-	<groupbox width="300px">
-	<label id="selectcustomer_meta_lbl" multiline="true" sclass="k9b" />
-	</groupbox>
-</hbox>
-</div>
+		<hbox>
+			<div id="foundcustomer_holder" width="300px" />
+			<groupbox width="300px">
+			<label id="selectcustomer_meta_lbl" multiline="true" sclass="k9b" />
+			</groupbox>
+		</hbox>
+	</div>
 </popup> <!-- ENDOF select customer popup -->
 
 <style src="/real-world.css" />
@@ -539,6 +546,9 @@ void importCOC()
 		<datebox id="enddate" style="font-size:9px" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
 		<button id="search_btn" label="Load" sclass="k9" onClick="startFolderJobsSearch(startdate, enddate)" />
 		<button id="viewquote_btn" label="Dig quotation" sclass="k9" onClick="digquotation_popup.open(self)" />
+
+		<button label="test SRA" onClick='genIndon_SRA("ALSI07652")' />
+
 <!--
 <button label="try cash-noti" onClick="cashAccount_EmailNotification(global_selected_folderstr)" />
 <button id="importcoc_btn" label="Import COC" sclass="k9" onClick="importCOC()" />
@@ -551,13 +561,13 @@ void importCOC()
 <div sclass="shadowbox" style="background:#404142">
 	<label sclass="subhead1" value="Folders/Jobs" />
 	<div id="folderjobs_div" />
-	<hbox>
-		<button id="newfolder_btn" label="New folder/job" sclass="k9" onClick="createNewFolder_Wrapper(hiddendatebox)" />
-		<button label="Remove" sclass="k9" onClick="deleteFolderJob()" />
-		<button label="Print Sample Receipt Advice" sclass="k9" onClick="printSRA_Wrapper()" />
-		<button id="savefolderinfo_btn" label="Save folder info" onClick="updateFolderJob()" />
-		<button label="Log-in folder/job" style="font-weight:bold" onClick="logFolderJob()" />
-	</hbox>
+		<hbox>
+			<button id="newfolder_btn" label="New folder/job" sclass="k9" onClick="createNewFolder_Wrapper(hiddendatebox)" />
+			<button label="Remove" sclass="k9" onClick="deleteFolderJob()" />
+			<button label="Print Sample Receipt Advice" sclass="k9" onClick="printSRA_Wrapper()" />
+			<button id="savefolderinfo_btn" label="Save folder info" onClick="updateFolderJob()" />
+			<button label="Log-in folder/job" style="font-weight:bold" onClick="logFolderJob()" />
+		</hbox>
 </div>
 <separator height="3px" />
 
@@ -633,13 +643,13 @@ void importCOC()
 						<rows>
 						<row>
 							<label value="Date samples received" sclass="k9" />
-							<datebox id="date_created" sclass="k9" format="yyyy-MM-dd" onCreate="self.value = new Date()" />
+							<datebox id="date_created" sclass="k9" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
 							<label value="Due date (working days)" sclass="k9" />
-							<datebox id="due_date" sclass="k9" format="yyyy-MM-dd" disabled="true" onCreate="self.value = new Date()" />
+							<datebox id="due_date" sclass="k9" format="yyyy-MM-dd" disabled="true" onCreate="kiboo.setTodayDatebox(self)" />
 						</row>
 						<row>
 							<label value="Customer requested due date" sclass="k9" />
-							<datebox id="clientreq_duedate" sclass="k9" format="yyyy-MM-dd" onCreate="self.value = new Date()" />
+							<datebox id="clientreq_duedate" sclass="k9" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
 							<label value="TAT" sclass="k9" />
 							<hbox>
 								<listbox id="tat_dd" mold="select" sclass="k9" />
@@ -940,6 +950,7 @@ void importCOC()
 </div> <!-- ENDOF workarea -->
 
 <label id="debugbox" multiline="true" />
+<div id="kasiexport" visible="false" />
 <!-- <button label="testing" onClick="admintesting()" /> -->
 
 <zscript>

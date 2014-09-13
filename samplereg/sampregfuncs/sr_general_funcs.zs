@@ -1,6 +1,8 @@
 import org.victor.*;
 // General purpose funcs for sample registration
 
+ALSI_SRA_TEMPLATE = "alsimg/alsi/alsi_sra_template_1.xls";
+
 // Use to disable all folder information groupbox 's form components
 // uses var whathuh and whathuh_samples to access the components
 // 19/11/2010: combine disable/enable function into 1 func..
@@ -85,8 +87,9 @@ void saveCashAccountDetails()
 void printSRA_Wrapper()
 {
 	if(global_selected_folder.equals("")) return;
-	printSRA(global_selected_folderstr); // samplereg_funcs.zs
-} // end of printSRA_Wrapper()
+	//printSRA(global_selected_folderstr); // samplereg_funcs.zs
+	genIndon_SRA(global_selected_folderstr);
+}
 
 void printSampleLabels_Wrapper()
 {
@@ -103,3 +106,67 @@ void printSampleLabels_Wrapper()
 	printSampleLabels(global_selected_folderstr); // samplereg_funcs.zs
 
 } // end of printSampleLabels_Wrapper()
+
+// 13/09/2014: ALSI SRA generator, uses Excel worksheet template
+void genIndon_SRA(String ifold)
+{
+	todaydate = kiboo.todayISODateString();
+	origid = samphand.extractFolderNo(ifold);
+	tr = samphand.getFolderJobRec(origid);
+	if(tr == null) return;
+
+	cr = sqlhand.getCompanyRecord(tr.get("ar_code"));
+	if(cr == null) return;
+
+	inpfn = session.getWebApp().getRealPath(ALSI_SRA_TEMPLATE);
+	InputStream inp = new FileInputStream(inpfn);
+	HSSFWorkbook excelWB = new HSSFWorkbook(inp);
+	evaluator = excelWB.getCreationHelper().createFormulaEvaluator();
+	HSSFSheet sheet = excelWB.getSheetAt(0);
+	//HSSFSheet sheet = excelWB.createSheet("THINGS");
+
+	Font wfont = excelWB.createFont();
+	wfont.setFontHeightInPoints((short)8);
+	wfont.setFontName("Arial");
+
+	excelInsertString(sheet,12,3, cr.get("customer_name") ); // Client
+	excelInsertString(sheet,13,3, kiboo.checkNullString(tr.get("attention")) ); // Contact
+
+	custaddr = kiboo.checkNullString( cr.get("address1") ) + "\n" +
+	kiboo.checkNullString( cr.get("address2") ) + "\n" +
+	kiboo.checkNullString( cr.get("address3") ) + "\n" +
+	kiboo.checkNullString( cr.get("Address4") );
+	excelInsertString(sheet,15,3, custaddr ); // Address
+
+	excelInsertString(sheet,19,3, kiboo.checkNullString(tr.get("customerpo")) ); // Project
+	excelInsertString(sheet,20,3, kiboo.checkNullString(tr.get("customerpo")) ); // Order Number
+	excelInsertString(sheet,22,3, kiboo.checkNullString(tr.get("customercoc")) ); // COC Number
+
+	excelInsertString(sheet,24,3, kiboo.checkNullString(cr.get("E_mail")) ); // E-mail
+	excelInsertString(sheet,25,3, kiboo.checkNullString(cr.get("telephone_no")) ); // Tel
+	excelInsertString(sheet,26,3, kiboo.checkNullString(cr.get("fax_no")) ); // Fax
+
+	excelInsertString(sheet,31,5, GlobalDefs.dtf2.format(tr.get("datecreated")) ); // Date Samples Received
+	excelInsertString(sheet,32,5, todaydate ); // SRA Issue Date
+	excelInsertString(sheet,33,5, GlobalDefs.dtf2.format(tr.get("duedate")) ); // Scheduled Reporting Date
+
+	excelInsertString(sheet,38,5, kiboo.checkNullString(tr.get("deliverymode")) ); // Mode of Delivery
+	excelInsertString(sheet,39,5, kiboo.checkNullString(tr.get("noboxes")) ); // No. of Coolers
+	excelInsertString(sheet,40,5, kiboo.checkNullString(tr.get("securityseal")) ); // Security Seal
+
+	excelInsertString(sheet,38,11, kiboo.checkNullString(tr.get("temperature")) ); // Temperature 
+
+	nosamps = samphand.getNumberOfSamples_InFolder(tr.get("origid")).toString();
+	excelInsertString(sheet,39,11, nosamps ); // No. of Samples 
+
+	excelInsertString(sheet,19,11, ifold ); // Work Order
+	excelInsertString(sheet,21,11, ifold ); // Unique Report ID
+
+	tfname = ifold + "_SRA.xls";
+	outfn = session.getWebApp().getRealPath("tmp/" + tfname );
+	FileOutputStream fileOut = new FileOutputStream(outfn);
+	excelWB.write(fileOut);
+	fileOut.close();
+	downloadFile(kasiexport,tfname,outfn);
+}
+
