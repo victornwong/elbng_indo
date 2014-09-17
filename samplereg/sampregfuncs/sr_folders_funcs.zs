@@ -29,11 +29,7 @@ void showFolderMetadata(String ifoldernum)
 	tr = samphand.getFolderJobRec(origid);
 	if(tr == null) return;
 	
-	//alert(ifoldernum + " :: " + origid + " :: " + therec);
-
 	global_selected_origid = tr.get("origid").toString();
-
-	//folderno.setValue(tr.get("folderno_str"));
 	folderno.setValue(global_selected_folderstr);
 
 	credate = tr.get("datecreated");
@@ -43,8 +39,7 @@ void showFolderMetadata(String ifoldernum)
 	ar_code.setValue(global_selected_arcode);
 	global_folder_status = tr.get("folderstatus"); // save selected folderstatus to glob
 
-	// 25/11/2010: clear cash-acct inputboxes
-	cashacct_gb.setVisible(false);
+	cashacct_gb.setVisible(false); // 25/11/2010: clear cash-acct inputboxes
 	clearCashAccountInputs();
 
 	if(!global_selected_arcode.equals(""))
@@ -64,7 +59,6 @@ void showFolderMetadata(String ifoldernum)
 	// 10/2/2010: if create-date is same as due-date, always when a new folder is created, due some TAT calc
 	if(dudate.equals(credate))
 	{
-		//woptat = Integer.parseInt(tr.get("tat"));
 		try
 		{
 			kiboo.addDaysToDate(date_created,due_date,tr.get("tat"));
@@ -75,12 +69,12 @@ void showFolderMetadata(String ifoldernum)
 	Object[] jkl = { date_created, extranotes, clientreq_duedate, customer_po, customer_coc, modeofdelivery,
 		securityseal, tat_dd, due_date, prepaid_tick, boxescount, box_temperature, allgoodorder,
 		paperworknot, paperworksamplesnot, samplesdamaged, attention, priority_dd, pkd_samples,
-		share_sample, track_flag, jobhold_status };
+		share_sample, track_flag, jobhold_status, j_customerproject, j_samplesentdate, j_quotation_no };
 
 	String[] fl = { "datecreated", "extranotes", "custreqdate", "customerpo", "customercoc", "deliverymode",
 		"securityseal", "tat", "duedate", "prepaid", "noboxes", "temperature", "allgoodorder",
 		"paperworknot", "paperworksamplesnot", "samplesdamaged", "attention", "priority", "pkd_samples",
-		"share_sample", "track_flag", "jobhold_status" };
+		"share_sample", "track_flag", "jobhold_status", "customerproject", "samplesentdate", "quotation_no" };
 
 	populateUI_Data(jkl, fl, tr);
 
@@ -115,9 +109,9 @@ void saveFolderMetadata()
 		box_temperature, clientreq_duedate, customer_po, customer_coc, tat_dd, due_date, allgoodorder, paperworknot,
 		paperworksamplesnot, samplesdamaged, priority_dd, attention, pkd_samples, share_sample,
 		prepaid_tick, subcon_flag, subcontractor_tb, subcon_sendout, subcon_notes, track_flag,
-		jobhold_status };
+		jobhold_status, j_customerproject, j_samplesentdate, j_quotation_no };
 
-	dt = getString_fromUI(jkl);
+	dt = ngfun.getString_fromUI(jkl);
 	dt[11] = kiboo.getDateFromDatebox(due_date);
 
 	// 25/07/2012: add some codes for working-days calc and TODO holidays maybe
@@ -132,6 +126,7 @@ void saveFolderMetadata()
 	// 13/01/2013: createdby - save who owns the folder
 	// 13/05/2013: track_flag - to track folder -- hahahaha
 	// 13/05/2013: jobhold_status - hold,reject,proceed
+	// 17/09/2014: for ALSI, add 2 fields, customerproject & samplesentdate
 
 	sqlstatem = "update JobFolders set ar_code='" + dt[0] + "', " +
 	"datecreated='" + dt[1] + "', extranotes='" + dt[2] + "', " +
@@ -149,8 +144,9 @@ void saveFolderMetadata()
 	"subcon_flag=" + dt[21] + ", subcontractor='" + dt[22] + "', " + 
 	"subcon_sendout='" + dt[23] + "',subcon_notes='" + dt[24] + "', " +
 	"createdby='" + useraccessobj.username + "', " +
-	"track_flag='" + dt[25] + "', jobhold_status='" + dt[26] + "' " +
-	" where origid=" + global_selected_folder;
+	"track_flag='" + dt[25] + "', jobhold_status='" + dt[26] + "', " +
+	"customerproject='" + dt[27] + "', samplesentdate='" + dt[28] + "', quotation_no='" + dt[29] + "' " +
+	"where origid=" + global_selected_folder;
 
 	sqlhand.gpSqlExecuter(sqlstatem);
 

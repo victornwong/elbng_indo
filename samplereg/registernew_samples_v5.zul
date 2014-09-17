@@ -63,6 +63,7 @@ Revisions/NOTES:
 25/05/2014: some mod to cater for folder-no > 99,999
 11/06/2014: optimize and recoding
 13/09/2014: add ALSI SRA genarator
+17/09/2014: additional fields, jobfolders.customerproject, samplesentdate
 
 */
 
@@ -565,8 +566,8 @@ void importCOC()
 			<button id="newfolder_btn" label="New folder/job" sclass="k9" onClick="createNewFolder_Wrapper(hiddendatebox)" />
 			<button label="Remove" sclass="k9" onClick="deleteFolderJob()" />
 			<button label="Print Sample Receipt Advice" sclass="k9" onClick="printSRA_Wrapper()" />
-			<button id="savefolderinfo_btn" label="Save folder info" onClick="updateFolderJob()" />
-			<button label="Log-in folder/job" style="font-weight:bold" onClick="logFolderJob()" />
+			<button id="savefolderinfo_btn" sclass="k9mo" label="Save folder info" onClick="updateFolderJob()" />
+			<button label="Log-in folder/job" sclass="k9mo" onClick="logFolderJob()" />
 		</hbox>
 </div>
 <separator height="3px" />
@@ -594,37 +595,43 @@ void importCOC()
 			<separator height="2px" />
 			<grid>
 				<rows>
-				<row>
-					<label value="FolderNo" sclass="k9" />
-					<textbox id="folderno" disabled="true" width="98%" style="font-size:12px;font-weight:bold" />
-					<label value="CustCode" sclass="k9" />
-					<hbox>
-						<!-- <textbox id="ar_code" width="80px" droppable="true" onDrop="dropAR_Code(event)" /> -->
-						<textbox id="ar_code" width="98%" disabled="true" />
-						<!-- <button label="Reload" style="font-size:8px" onClick="refreshCustomerDetails_Clicker()" /> -->
-					</hbox>
-				</row>
-				<row>
-					<label value="Contact.Person" sclass="k9" />
-					<textbox id="attention" width="99%" sclass="k9"/>
-					<button id="assigncustomer_btn" label="Assign customer" sclass="k9" onClick="selectcustomer_popup.open(customer_po)" />
-					<label id="cfind_holder" />
-				</row>
-				<row>
-					<label value="Project / PO#" sclass="k9" />
-					<!--
-					<textbox id="customer_po" sclass="k9" width="99%" />		
-					-->
-					<combobox id="customer_po" sclass="k9" width="90%" >
-						<comboitem label="RIVER CONTRACT" />
-						<comboitem label="ROL" />
-						<comboitem label="PUTRAJAYA" />
-						<comboitem label="IND MONITORING" />
-					</combobox>
+					<row>
+						<label value="FolderNo" sclass="k9" />
+						<textbox id="folderno" disabled="true" width="98%" style="font-size:12px;font-weight:bold" />
+						<label value="CustCode" sclass="k9" />
+						<hbox>
+							<!-- <textbox id="ar_code" width="80px" droppable="true" onDrop="dropAR_Code(event)" /> -->
+							<textbox id="ar_code" width="98%" disabled="true" />
+							<!-- <button label="Reload" style="font-size:8px" onClick="refreshCustomerDetails_Clicker()" /> -->
+						</hbox>
+					</row>
+					<row>
+						<label value="Contact.Person" sclass="k9" />
+						<textbox id="attention" width="99%" sclass="k9"/>
+						<button id="assigncustomer_btn" label="Assign customer" sclass="k9" onClick="selectcustomer_popup.open(customer_po)" />
+						<label id="cfind_holder" />
+					</row>
+					<row>
+						<label value="Project / PO#" sclass="k9" />
+						<!--
+						<textbox id="customer_po" sclass="k9" width="99%" />		
+						-->
+						<combobox id="j_customerproject" sclass="k9" width="90%" >
+							<comboitem label="RIVER CONTRACT" />
+							<comboitem label="ROL" />
+							<comboitem label="PUTRAJAYA" />
+							<comboitem label="IND MONITORING" />
+						</combobox>
 
-					<label value="Customer.COC" sclass="k9" />
-					<textbox id="customer_coc" sclass="k9" width="99%" />
-				</row>
+						<label value="Customer.COC" sclass="k9" />
+						<textbox id="customer_coc" sclass="k9" width="99%" />
+					</row>
+					<row>
+						<label value="Work order" sclass="k9" />
+						<textbox id="customer_po" sclass="k9" width="90%" />
+						<label value="Our quote no." sclass="k9" />
+						<textbox id="j_quotation_no" sclass="k9" width="90%" />
+					</row>
 				</rows>
 			</grid>
 			
@@ -641,21 +648,25 @@ void importCOC()
 				<vbox>
 					<grid>
 						<rows>
-						<row>
-							<label value="Date samples received" sclass="k9" />
-							<datebox id="date_created" sclass="k9" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
-							<label value="Due date (working days)" sclass="k9" />
-							<datebox id="due_date" sclass="k9" format="yyyy-MM-dd" disabled="true" onCreate="kiboo.setTodayDatebox(self)" />
-						</row>
-						<row>
-							<label value="Customer requested due date" sclass="k9" />
-							<datebox id="clientreq_duedate" sclass="k9" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
-							<label value="TAT" sclass="k9" />
-							<hbox>
-								<listbox id="tat_dd" mold="select" sclass="k9" />
-								<label value=" day(s)" sclass="k9" />
-							</hbox>
-						</row>
+							<row>
+								<label value="Date samples sent" sclass="k9" />
+								<datebox id="j_samplesentdate" style="font-size:9px" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
+							</row>
+							<row>
+								<label value="Date samples received" sclass="k9" />
+								<datebox id="date_created" style="font-size:9px" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
+								<label value="Due date (working days)" sclass="k9" />
+								<datebox id="due_date" style="font-size:9px" format="yyyy-MM-dd" disabled="true" onCreate="kiboo.setTodayDatebox(self)" />
+							</row>
+							<row>
+								<label value="Customer requested due date" sclass="k9" />
+								<datebox id="clientreq_duedate" style="font-size:9px" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
+								<label value="TAT" sclass="k9" />
+								<hbox>
+									<listbox id="tat_dd" mold="select" sclass="k9" />
+									<label value=" day(s)" sclass="k9" />
+								</hbox>
+							</row>
 						</rows>
 					</grid>
 					<vbox>
@@ -991,119 +1002,6 @@ if(useraccessobj.accesslevel >= 9)
 // show empty samples listbox when loaded
 //startFolderSamplesSearch(folderno);
 
-
-// ---- Customer search popup stuff ---- can be used in other modules
-
-/*
-void showCustomerInfo(String iarcode)
-{
-	comprec = sqlhand.getCompanyRecord(iarcode);
-	if(comprec == null) return;
-
-	cfind_company_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("customer_name"),"---UNDEFINED---"));
-	cfind_address1_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("address1"),"------"));
-	cfind_address2_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("address2"),"------"));
-	cfind_address3_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("address3"),"------"));
-	//cfind_address4_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("Address4"),"------"));
-	cfind_tel_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("telephone_no"),"-----"));
-	cfind_fax_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("fax_no"),"-----"));
-	cfind_contact_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("contact_person1"),"-----"));
-	cfind_email_lbl.setValue(kiboo.checkNullString_RetWat(comprec.get("E_mail"),"-----"));
-
-	// if(iarcode.equals("BLACKLIST")) custinfo_gb.setStyle("background:#FF3333");
-}
-
-class searchcustomersLB_Listener implements org.zkoss.zk.ui.event.EventListener
-{
-	public void onEvent(Event event) throws UiException
-	{
-		selitem = event.getReference();
-		tarcode = lbhand.getListcellItemLabel(selitem,0);
-		showCustomerInfo(tarcode);
-	}
-}
-
-// onDoubleClick listener for searchCustomers()
-class searchcustLBDoubleClick_Listener implements org.zkoss.zk.ui.event.EventListener
-{
-	public void onEvent(Event event) throws UiException
-	{
-		selitem = customers_lb.getSelectedItem();
-		sarcode = lbhand.getListcellItemLabel(selitem,0);
-		if(sarcode.equals("BLACKLIST")) return;
-
-		comprec = sqlhand.getCompanyRecord(sarcode);
-		if(comprec != null)
-		{
-			// customize this part if need to use in other module - where to show the selected client info
-			ar_code.setValue(comprec.get("ar_code"));
-			global_selected_arcode = comprec.get("ar_code");
-			customername.setValue(global_selected_folderstr + " : " + comprec.get("customer_name"));
-			attention.setValue(comprec.get("contact_person1"));
-			selectcustomer_popup.close(); // close popup
-
-			if(global_selected_arcode.equals("CASH") || global_selected_arcode.equals("CASH USD"))
-				populateCashAccountPopup(global_selected_arcode);
-		}
-	}
-}
-
-// 18/03/2011: sqlstatement put in check for inactive account = isinactive field
-// 18/03/2011: 300P/086 and 300P/267 hardcoded to block
-void searchCustomers()
-{
-Object[] clients_lb_headers = {
-	new listboxHeaderObj("AR_CODE",true),
-	new listboxHeaderObj("Company",true),
-	};
-
-	schtext = kiboo.replaceSingleQuotes(cust_search_tb.getValue());
-	if(schtext.equals("")) return;
-
-	Listbox newlb = lbhand.makeVWListbox(foundcustomer_holder, clients_lb_headers, "customers_lb", 5);
-
-	sql = sqlhand.als_mysoftsql();
-	if(sql == null) return;
-
-	sqlstm = "select top 50 ar_code,customer_name,credit_period from customer where " +
-	"(ar_code like '%" + schtext + "%' or " +
-	"customer_name like '%" + schtext + "%' or " +
-	"address1 like '%" + schtext + "%' or " +
-	"address2 like '%" + schtext + "%' or " +
-	"address3 like '%" + schtext + "%' or " +
-	"address4 like '%" + schtext + "%' or " +
-	"contact_person1 like '%" + schtext + "%') and " +
-	"isinactive=0 " +
-	"order by customer_name";
-
-	custrecs = sql.rows(sqlstm);
-	sql.close();
-
-	if(custrecs.size() == 0) return;
-	newlb.setRows(10);
-	newlb.addEventListener("onSelect", new searchcustomersLB_Listener());
-
-	for(dpi : custrecs)
-	{
-		ArrayList kabom = new ArrayList();
-
-		credp = dpi.get("credit_period");
-		arcode = dpi.get("ar_code").trim();
-		if(credp.equals("BLACKLIST")) arcode = "BLACKLIST";
-		if(arcode.equals("300P/086") || arcode.equals("300P/267")) arcode = "BLOCKED";
-		kabom.add(arcode);
-
-		kabom.add(dpi.get("customer_name"));
-
-		strarray = kiboo.convertArrayListToStringArray(kabom);
-		lbhand.insertListItems(newlb,strarray,"false","");
-	}
-	
-	dc_obj = new searchcustLBDoubleClick_Listener();
-	lbhand.setDoubleClick_ListItems(newlb, dc_obj);
-}
-*/
-// ---- ENDOF Customer search popup stuff ----
 
 ]]>
 </zscript>

@@ -95,11 +95,11 @@ Object[] clients_lb_headers = {
 	ArrayList kabom = new ArrayList();
 	for(dpi : custrecs)
 	{
-		credp = dpi.get("credit_period");
-		arcode = dpi.get("ar_code");
+		credp = kiboo.checkNullString(dpi.get("credit_period"));
+		arcode = kiboo.checkNullString(dpi.get("ar_code"));
 		if(credp.equals("BLACKLIST")) arcode = "BLACKLIST";
 		kabom.add(arcode);
-		kabom.add(dpi.get("customer_name"));
+		kabom.add( kiboo.checkNullString(dpi.get("customer_name")) );
 		lbhand.insertListItems(newlb,kiboo.convertArrayListToStringArray(kabom),"false","");
 		kabom.clear();
 	}

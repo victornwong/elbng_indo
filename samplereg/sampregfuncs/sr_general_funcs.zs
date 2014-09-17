@@ -138,29 +138,33 @@ void genIndon_SRA(String ifold)
 	kiboo.checkNullString( cr.get("Address4") );
 	excelInsertString(sheet,15,3, custaddr ); // Address
 
-	excelInsertString(sheet,19,3, kiboo.checkNullString(tr.get("customerpo")) ); // Project
-	excelInsertString(sheet,20,3, kiboo.checkNullString(tr.get("customerpo")) ); // Order Number
-	excelInsertString(sheet,22,3, kiboo.checkNullString(tr.get("customercoc")) ); // COC Number
+	excelInsertString(sheet,19,3, senkang_ifBlankString(kiboo.checkNullString(tr.get("customerproject"))) ); // Project
+	excelInsertString(sheet,20,3, senkang_ifBlankString(kiboo.checkNullString(tr.get("customerpo"))) ); // Order Number
+	excelInsertString(sheet,22,3, senkang_ifBlankString(kiboo.checkNullString(tr.get("customercoc"))) ); // COC Number
 
-	excelInsertString(sheet,24,3, kiboo.checkNullString(cr.get("E_mail")) ); // E-mail
-	excelInsertString(sheet,25,3, kiboo.checkNullString(cr.get("telephone_no")) ); // Tel
-	excelInsertString(sheet,26,3, kiboo.checkNullString(cr.get("fax_no")) ); // Fax
+	excelInsertString(sheet,24,3, senkang_ifBlankString(kiboo.checkNullString(cr.get("E_mail"))) ); // E-mail
+	excelInsertString(sheet,25,3, senkang_ifBlankString(kiboo.checkNullString(cr.get("telephone_no"))) ); // Tel
+	excelInsertString(sheet,26,3, senkang_ifBlankString(kiboo.checkNullString(cr.get("fax_no"))) ); // Fax
 
 	excelInsertString(sheet,31,5, GlobalDefs.dtf2.format(tr.get("datecreated")) ); // Date Samples Received
+	excelInsertString(sheet,31,11, GlobalDefs.dtf2.format(tr.get("samplesentdate")) ); // Date Samples sent
 	excelInsertString(sheet,32,5, todaydate ); // SRA Issue Date
 	excelInsertString(sheet,33,5, GlobalDefs.dtf2.format(tr.get("duedate")) ); // Scheduled Reporting Date
 
 	excelInsertString(sheet,38,5, kiboo.checkNullString(tr.get("deliverymode")) ); // Mode of Delivery
-	excelInsertString(sheet,39,5, kiboo.checkNullString(tr.get("noboxes")) ); // No. of Coolers
+	excelInsertString(sheet,39,5, senkang_ifBlankString(kiboo.checkNullString(tr.get("noboxes"))) ); // No. of Coolers
 	excelInsertString(sheet,40,5, kiboo.checkNullString(tr.get("securityseal")) ); // Security Seal
 
-	excelInsertString(sheet,38,11, kiboo.checkNullString(tr.get("temperature")) ); // Temperature 
+	excelInsertString(sheet,38,11, senkang_ifBlankString(kiboo.checkNullString(tr.get("temperature"))) ); // Temperature 
 
 	nosamps = samphand.getNumberOfSamples_InFolder(tr.get("origid")).toString();
 	excelInsertString(sheet,39,11, nosamps ); // No. of Samples 
 
+	excelInsertString(sheet,18,11, senkang_ifBlankString(kiboo.checkNullString(tr.get("quotation_no"))) ); // Quote Number
 	excelInsertString(sheet,19,11, ifold ); // Work Order
 	excelInsertString(sheet,21,11, ifold ); // Unique Report ID
+
+	excelInsertString(sheet,64,2, senkang_ifBlankString(kiboo.checkNullString(tr.get("extranotes"))) ); // Notes
 
 	tfname = ifold + "_SRA.xls";
 	outfn = session.getWebApp().getRealPath("tmp/" + tfname );
@@ -170,3 +174,7 @@ void genIndon_SRA(String ifold)
 	downloadFile(kasiexport,tfname,outfn);
 }
 
+String senkang_ifBlankString(String iwhat)
+{
+	return (iwhat.equals("")) ? "-" : iwhat;
+}
