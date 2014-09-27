@@ -25,7 +25,7 @@ MYPANEL = "registernewsamples_panel";
 @Title Register new incoming PO/COC/Samples
 @Author Victor Wong
 
-Revisions/NOTES:
+Revisions/NOTES: ** SOME NOTES ARE FOR ALSI **
 
 29/3/2010: added branch - for deployment to other branches later
 	in startFolderJobsSearch(), will make use of the branch code to list out only relevant folders instead of everything
@@ -64,6 +64,7 @@ Revisions/NOTES:
 11/06/2014: optimize and recoding
 13/09/2014: add ALSI SRA genarator
 17/09/2014: additional fields, jobfolders.customerproject, samplesentdate
+27/09/2014: due-date = customer-request date when job folder is saved : req by Foong
 
 */
 
@@ -548,7 +549,7 @@ void importCOC()
 		<button id="search_btn" label="Load" sclass="k9" onClick="startFolderJobsSearch(startdate, enddate)" />
 		<button id="viewquote_btn" label="Dig quotation" sclass="k9" onClick="digquotation_popup.open(self)" />
 
-		<button label="test SRA" onClick='genIndon_SRA("ALSI07652")' />
+		<button id="testbutt" label="test SRA" onClick='genIndon_SRA("ALSI07652")' visible="false" />
 
 <!--
 <button label="try cash-noti" onClick="cashAccount_EmailNotification(global_selected_folderstr)" />
@@ -996,6 +997,7 @@ if(sechand.check_UsergroupAccess(useraccessobj.origid,SAMPREG_USERGROUP,4))
 
 if(useraccessobj.accesslevel >= 9)
 {
+	testbutt.setVisible(true);
 	//testinternalsrn_btn.setVisible(true);
 }
 

@@ -76,7 +76,7 @@ void showFolderMetadata(String ifoldernum)
 		"paperworknot", "paperworksamplesnot", "samplesdamaged", "attention", "priority", "pkd_samples",
 		"share_sample", "track_flag", "jobhold_status", "customerproject", "samplesentdate", "quotation_no" };
 
-	populateUI_Data(jkl, fl, tr);
+	populateUI_Data(jkl, fl, tr); // some casting err in java-codes, use .zs codes
 
 	// 27/1/2010: if folderstatus is LOGGED, don't allow changes to the customer-code
 	global_selected_folder = origid; // save global for later
@@ -127,6 +127,7 @@ void saveFolderMetadata()
 	// 13/05/2013: track_flag - to track folder -- hahahaha
 	// 13/05/2013: jobhold_status - hold,reject,proceed
 	// 17/09/2014: for ALSI, add 2 fields, customerproject & samplesentdate
+	// 27/09/2014: ALSI - due-date(dt[11]) = clientreq_duedate(dt[7])
 
 	sqlstatem = "update JobFolders set ar_code='" + dt[0] + "', " +
 	"datecreated='" + dt[1] + "', extranotes='" + dt[2] + "', " +
@@ -135,7 +136,7 @@ void saveFolderMetadata()
 	"noboxes='" + dt[5] + "', temperature='" + dt[6] + "', " +
 	"custreqdate='" + dt[7] + "', customerpo='" + dt[8] + "', " +
 	"customercoc='" + dt[9] + "', folderstatus='" + global_folder_status + "', " +
-	"tat=" + dt[10] + ", duedate='" + dt[11] + "', " +
+	"tat=" + dt[10] + ", duedate='" + dt[7] + "', " +
 	"allgoodorder=" + dt[12] + ", paperworknot=" + dt[13] + ", " +
 	"paperworksamplesnot=" + dt[14] + ", samplesdamaged=" + dt[15] + ", " +
 	"priority='" + dt[16] + "', attention='" + dt[17] + "', " +
