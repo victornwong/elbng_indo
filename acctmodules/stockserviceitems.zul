@@ -10,7 +10,7 @@
 <zscript>
 <![CDATA[
 MYTITLE="Test/Service/Sale Items Manager";
-MYVERSION="v0.82";
+MYVERSION="iv0.83";
 MYPANEL="stockserviceitems_panel";
 /*
 Title				: Service/Sales Items Manager
@@ -24,6 +24,7 @@ Developers			: Victor
 09/08/2012: put newfield5 for form-keeper-id
 07/03/2013: newfield4 set for subcon - if null or 0, ignore
 09/08/2014: optimization and UI enhancement
+07/10/2014: modifiy for ALS Indonesia
 
 StockMasterDetails.newfield10 = units
 StockMasterDetails.newfield9 = bill - YES/NO
@@ -49,9 +50,8 @@ myincludeid = Executions.getCurrent().getParameter("myid");
 useraccessobj = sechand.getUserAccessObject();
 if(useraccessobj == null) Executions.sendRedirect(MAINLOGIN_PAGE);
 
-kiboo = new Generals(); sqlhand = new SqlFuncs();
-lbhand = new ListboxHandler(); guihand = new GuiFuncs();
-samphand = new SampleReg(); luhand = new LookupFuncs();
+kiboo = new Generals(); sqlhand = new SqlFuncs(); lbhand = new ListboxHandler(); guihand = new GuiFuncs();
+samphand = new SampleReg(); luhand = new LookupFuncs(); NGfuncs ngfun = new NGfuncs();
 
 TestsPanel testspanel;
 
@@ -168,41 +168,15 @@ void showStockItem_Metadata(String imysoftcode)
 	stkrec = sqlhand.getMySoftMasterProductRec(imysoftcode);
 	if(stkrec == null) return;
 
-	si_stockcode.setValue(kiboo.checkNullString(stkrec.get("Stock_Code")));
-	si_description.setValue(kiboo.checkNullString(stkrec.get("Description")));
-	si_description2.setValue(kiboo.checkNullString(stkrec.get("Description2")));
+	Object[] jkl = { si_stockcode, si_description, si_description2, si_product_details, si_cost_price, si_selling_price,
+		si_units_newfield10, si_billclient, si_lor_newfield8, si_casnumber_newfield7, si_precondmethod_field6,
+		si_id, si_formkeeper_newfield5 };
 
-	proddet = stkrec.get("Product_Detail");
-	long length = proddet.length();
-	String prodstr = proddet.getSubString(1, (int)length);
+	String[] fl = { "Stock_Code", "Description", "Description2", "Product_Detail", "Cost_Price", "Selling_Price",
+		"NewField10", "NewField9", "NewField8", "NewField7", "NewField6", 
+		"ID", "NewField5", };
 
-	si_product_details.setValue(prodstr);
-	lbhand.matchListboxItemsColumn(si_nominal_code_lb,stkrec.get("Nominal_Code"),1);
-
-	DecimalFormat df = new DecimalFormat("#.##");
-
-	costprice = new BigDecimal(stkrec.get("Cost_Price"));
-	si_cost_price.setValue(costprice);
-
-	sellingp = new BigDecimal(stkrec.get("Selling_Price"));
-	si_selling_price.setValue(sellingp);
-
-	si_units_newfield10.setValue(kiboo.checkNullString(stkrec.get("NewField10")));
-	//lbhand.matchListboxItems(si_units_newfield10,units_nf10);
-	
-	billyou_nf9 = stkrec.get("NewField9");
-	billyou_nf9 = (billyou_nf9 == null) ? 1 : (billyou_nf9.equals("YES")) ? 0 : 1;
-	si_billclient.setSelectedIndex(billyou_nf9);
-	
-	si_lor_newfield8.setValue(kiboo.checkNullString(stkrec.get("NewField8")));
-	si_casnumber_newfield7.setValue(kiboo.checkNullString(stkrec.get("NewField7")));
-	
-	// 16/07/2012: pre-conditioning method - for BS tests - req by Zakiah
-	si_precondmethod_field6.setValue(kiboo.checkNullString(stkrec.get("NewField6")));
-
-	// 09/08/2012: show stock-id and form-keeper-id
-	si_id.setValue( stkrec.get("ID").toString() );
-	si_formkeeper_newfield5.setValue( kiboo.checkNullString(stkrec.get("NewField5")) );
+	ngfun.populateUI_Data(jkl, fl, stkrec);
 
 	si_stockcode.setDisabled(true); // if selected stock-item, cannot change stock-code, will screw-up whole system
 }
@@ -212,22 +186,8 @@ void clearStockitem_clicker()
 	Object[] jkl = {si_stockcode, si_description, si_description2, si_product_details, si_nominal_code_lb, si_cost_price, 
 		si_selling_price, si_units_newfield10, si_lor_newfield8, si_casnumber_newfield7, si_precondmethod_field6 };
 
-	clearUI_Field(jkl);
-/*
-	si_stockcode.setValue("");
-	si_description.setValue("");
-	si_description2.setValue("");
-	si_product_details.setValue("");
-	si_nominal_code_lb.setSelectedIndex(0);
-	zerome = new BigDecimal(0);
-	si_cost_price.setValue(zerome);
-	si_selling_price.setValue(zerome);
-	si_units_newfield10.setValue("");
-	//si_units_newfield10.setSelectedIndex(0);
-	si_lor_newfield8.setValue("");
-	si_casnumber_newfield7.setValue("");
-	si_precondmethod_field6.setValue("");
-*/
+	ngfun.clearUI_Field(jkl);
+
 	si_billclient.setSelectedIndex(1);
 	selected_test = ""; // clear global selected_test - to disallow updating of earlier selected item - in case
 	newstockitem_btn.setLabel("New test/sale item");
@@ -236,26 +196,24 @@ void clearStockitem_clicker()
 
 void updateStockItem(int iwhich)
 {
-	stokcode = si_stockcode.getValue();
 	descr = kiboo.replaceSingleQuotes(si_description.getValue());
 	descr2 = kiboo.replaceSingleQuotes(si_description2.getValue());
 	prodet = kiboo.replaceSingleQuotes(si_product_details.getValue());
-
-	selitem = si_nominal_code_lb.getSelectedItem();
 	nominalc = lbhand.getListcellItemLabel(selitem,1);
-
-	costp = si_cost_price.getValue().toString();
 	sellp = si_selling_price.getValue().toString();
-
+	costp = si_cost_price.getValue().toString();
 	theunits = si_units_newfield10.getValue();
-	//theunits = si_units_newfield10.getSelectedItem().getLabel();
 	billclient = si_billclient.selectedItem.label;
 	lor = si_lor_newfield8.getValue();
 	casnum = si_casnumber_newfield7.getValue();
 	precondmet = si_precondmethod_field6.getValue(); // 16/07/2012: pre-conditioning method
-
 	formkeeperid = si_formkeeper_newfield5.getValue();
 
+	stokcode = si_stockcode.getValue();
+	
+	selitem = si_nominal_code_lb.getSelectedItem();
+	//theunits = si_units_newfield10.getSelectedItem().getLabel();
+	
 	sqlstm = "update stockmasterdetails set description='" + descr + "', description2='" + descr2 + "', product_detail='" + prodet + "', " +
 	"nominal_code='" + nominalc + "', selling_price=" + sellp + ", cost_price=" + costp + 
 	", newfield10='" + theunits + "', newfield9='" + billclient + "', newfield8='" + lor + "', newfield7='" + casnum + "', " +
@@ -632,7 +590,7 @@ void setSubonFunc(int itype)
 		<div id="units_holder" />
 	</hbox>
 	<separator height="3px" />
-	<button label="X Close" style="font-size:9px" onClick="units_selector_popup.close()" />
+	<button label="X Close" sclass="k9" onClick="units_selector_popup.close()" />
 </groupbox>
 </popup>
 <!-- end of units selector popup -->
@@ -641,7 +599,7 @@ void setSubonFunc(int itype)
 <popup id="sectionmover_popup">
 <div id="sectionmover_holder" width="200px" />
 <separator height="3px" />
-<button label="X Close" style="font-size:9px" onClick="sectionmover_popup.close()" />
+<button label="X Close" sclass="k9" onClick="sectionmover_popup.close()" />
 </popup>
 <!-- end of section-mover popup -->
 
@@ -650,9 +608,9 @@ void setSubonFunc(int itype)
 <groupbox mold="3d" width="600px" style="padding:3px">
 	<caption label="Search Items.." />
 	<hbox>
-		<label value="Search item" style="font-size:9px" />
-		<textbox id="itemsearch_text" style="font-size:9px" width="200px" />
-		<button label="Find" style="font-size:9px" onClick="searchStockItem_clicker()" />
+		<label value="Search item" sclass="k9" />
+		<textbox id="itemsearch_text" sclass="k9" width="200px" />
+		<button label="Find" sclass="k9" onClick="searchStockItem_clicker()" />
 	</hbox>
 	<separator height="3px" />
 	<div id="founditems_holder" />
@@ -660,12 +618,14 @@ void setSubonFunc(int itype)
 </popup>
 <!-- end of stock items search popup -->
 
+<style src="/real-world.css" />
+
 <div width="1200px">
 <panel id="${MYPANEL}" title="${MYTITLE} ${MYVERSION}" border="normal" collapsible="true" closable="true" >
 <panelchildren>
 <datebox id="hiddendatebox" format="yyyy-MM-dd" visible="false" />
 <hbox>
-	<button id="searchitem_btn" label="Search item" style="font-size:9px" onClick="searchitem_popup.open(searchitem_btn)" />
+	<button id="searchitem_btn" label="Search item" sclass="k9" onClick="searchitem_popup.open(searchitem_btn)" />
 </hbox>
 <separator height="3px" />
 <hbox>
@@ -684,7 +644,7 @@ void setSubonFunc(int itype)
 <groupbox mold="3d">
 	<div id="testparameters_column" />
 	<separator height="3px" />
-	<button label="Move item to different section" style="font-size:9px" onClick="moveStockItem_Groupcode_clicker()" />
+	<button label="Move item to different section" sclass="k9" onClick="moveStockItem_Groupcode_clicker()" />
 </groupbox>
 </hbox>
 
@@ -699,40 +659,40 @@ void setSubonFunc(int itype)
 	<grid>
 		<rows>
 			<row>
-				<label value="ID" style="font-size:9px" />
-				<label id="si_id" style="font-size:9px" />
+				<label value="ID" sclass="k9" />
+				<label id="si_id" sclass="k9" />
 			</row>
 			<row>
-				<label value="Stock.Code" style="font-size:9px" />
-				<textbox id="si_stockcode" width="200px" style="font-size:9px" />
+				<label value="Stock.Code" sclass="k9" />
+				<textbox id="si_stockcode" width="200px" sclass="k9" />
 			</row>
 			<row>
-				<label value="Item.Name" style="font-size:9px" />
-				<textbox id="si_description" width="99%" style="font-size:9px" />
+				<label value="Item.Name" sclass="k9" />
+				<textbox id="si_description" width="99%" sclass="k9" />
 			</row>
 			<row>
-				<label value="Method" style="font-size:9px" />
-				<textbox id="si_description2" width="99%" style="font-size:9px" />
+				<label value="Method" sclass="k9" />
+				<textbox id="si_description2" width="99%" sclass="k9" />
 			</row>
 			<row>
-				<label value="Pre-conditioning method" style="font-size:9px" />
-				<textbox id="si_precondmethod_field6" width="99%" style="font-size:9px" />
+				<label value="Pre-conditioning method" sclass="k9" />
+				<textbox id="si_precondmethod_field6" width="99%" sclass="k9" />
 			</row>
 			<row>
-				<label value="Details" style="font-size:9px" />
-				<textbox id="si_product_details" multiline="true" height="80px" width="99%" style="font-size:9px" />
+				<label value="Details" sclass="k9" />
+				<textbox id="si_product_details" multiline="true" height="80px" width="99%" sclass="k9" />
 			</row>
 			<row>
-				<label value="Sales.Code" style="font-size:9px" />
-				<listbox id="si_nominal_code_lb" mold="select" style="font-size:9px" />
+				<label value="Sales.Code" sclass="k9" />
+				<listbox id="si_nominal_code_lb" mold="select" sclass="k9" />
 			</row>
 			<row>
-				<label value="Cost.Price" style="font-size:9px" />
+				<label value="Cost.Price" sclass="k9" />
 				<hbox>
-					<decimalbox id="si_cost_price" value="0" width="80px" format="#.#" style="font-size:9px" />
+					<decimalbox id="si_cost_price" value="0" width="80px" format="#.#" sclass="k9" />
 					<separator width="90px" />
-					<label value="Sell.Price" style="font-size:9px" />
-					<decimalbox id="si_selling_price" value="0" width="80px" format="#.#" style="font-size:9px" />
+					<label value="Sell.Price" sclass="k9" />
+					<decimalbox id="si_selling_price" value="0" width="80px" format="#.#" sclass="k9" />
 				</hbox>
 			</row>
 		</rows>
@@ -741,39 +701,39 @@ void setSubonFunc(int itype)
 	<grid>
 		<rows>
 			<row>
-				<label value="FormKeeper ID" style="font-size:9px" />
-				<textbox id="si_formkeeper_newfield5" style="font-size:9px" />
+				<label value="FormKeeper ID" sclass="k9" />
+				<textbox id="si_formkeeper_newfield5" sclass="k9" />
 			</row>
 			<row>
-				<label value="CAS #" style="font-size:9px" />
-				<textbox id="si_casnumber_newfield7" style="font-size:9px" />
-				<!-- <button id="pickcasnum_btn" label="Pick CAS#" style="font-size:9px" /> -->
+				<label value="CAS #" sclass="k9" />
+				<textbox id="si_casnumber_newfield7" sclass="k9" />
+				<!-- <button id="pickcasnum_btn" label="Pick CAS#" sclass="k9" /> -->
 			</row>
 			<row>
-				<label value="LOR/MDL" style="font-size:9px" />
-				<textbox id="si_lor_newfield8" style="font-size:9px" />
+				<label value="LOR/MDL" sclass="k9" />
+				<textbox id="si_lor_newfield8" sclass="k9" />
 			</row>
 			<row>
-				<label value="Bill client" style="font-size:9px" />
+				<label value="Bill client" sclass="k9" />
 				<radiogroup id="si_billclient" >
-					<radio label="YES" style="font-size:9px" selected="true" />
-					<radio label="NO" style="font-size:9px" />
+					<radio label="YES" sclass="k9" selected="true" />
+					<radio label="NO" sclass="k9" />
 				</radiogroup>
 			</row>
 			<row>
-				<label value="Units" style="font-size:9px" />
+				<label value="Units" sclass="k9" />
 				<hbox>
-					<textbox id="si_units_newfield10" style="font-size:9px" />
-					<button id="unitspicker_btn" label="Get units" style="font-size:9px" onClick="unitsPicker_clicker()" />
+					<textbox id="si_units_newfield10" sclass="k9" />
+					<button id="unitspicker_btn" label="Get units" sclass="k9" onClick="unitsPicker_clicker()" />
 				</hbox>
 			</row>
 			<row>
-				<label value="Subcon" style="font-size:9px" />
+				<label value="Subcon" sclass="k9" />
 				<vbox>
-					<listbox id="si_newfield4_subcon" mold="select" style="font-size:9px" />
+					<listbox id="si_newfield4_subcon" mold="select" sclass="k9" />
 					<hbox>
-						<button label="Set subcon" style="font-size:9px" onClick="setSubonFunc(1)" />
-						<button label="Remove subcon" style="font-size:9px" onClick="setSubonFunc(2)" />
+						<button label="Set subcon" sclass="k9" onClick="setSubonFunc(1)" />
+						<button label="Remove subcon" sclass="k9" onClick="setSubonFunc(2)" />
 					</hbox>
 				</vbox>
 			</row>
@@ -784,12 +744,12 @@ void setSubonFunc(int itype)
 			<caption label="CAS #" />
 			
 			<hbox>
-				<label value="CAS/Chemical.Name" style="font-size:9px" />
+				<label value="CAS/Chemical.Name" sclass="k9" />
 				<separator width="5px" />
-				<textbox id="main_searchstr" width="150px" style="font-size:9px" />
-				<button label="Search" style="font-size:9px" onClick="searchCAS_clicker(main_searchstr,casmegalist_holder)" />
+				<textbox id="main_searchstr" width="150px" sclass="k9" />
+				<button label="Search" sclass="k9" onClick="searchCAS_clicker(main_searchstr,casmegalist_holder)" />
 				<separator width="5px" />
-				<label value="(search max. 100 CAS per click)" style="font-size:9px" />
+				<label value="(search max. 100 CAS per click)" sclass="k9" />
 			</hbox>
 			<separator height="3px" />
 			<div id="casmegalist_holder" />
@@ -797,9 +757,9 @@ void setSubonFunc(int itype)
 
 	</hbox>
 	<separator height="3px" />
-	<button id="clearfields_btn" label="Clear fields" style="font-size:9px" onClick="clearStockitem_clicker()" />
-	<button id="newstockitem_btn" label="New test/sale item" style="font-size:9px" onClick="newupdatestockitem_clicker()" />
-	<button id="delstockitem_btn" label="DELETE (admin only)" style="font-size:9px" visible="false" onClick="deleteStockItem_clicker()"  />
+	<button id="clearfields_btn" label="Clear fields" sclass="k9" onClick="clearStockitem_clicker()" />
+	<button id="newstockitem_btn" label="New test/sale item" sclass="k9" onClick="newupdatestockitem_clicker()" />
+	<button id="delstockitem_btn" label="DELETE (admin only)" sclass="k9" visible="false" onClick="deleteStockItem_clicker()"  />
 
 </groupbox>
 
@@ -833,6 +793,45 @@ if(useraccessobj.accesslevel == 9)
 {
 	delstockitem_btn.setVisible(true);
 }
+
+/*
+showStockItem_Metadata() -- old codes unused, just keep
+	si_stockcode.setValue(kiboo.checkNullString(stkrec.get("Stock_Code")));
+	si_description.setValue(kiboo.checkNullString(stkrec.get("Description")));
+	si_description2.setValue(kiboo.checkNullString(stkrec.get("Description2")));
+
+	proddet = stkrec.get("Product_Detail");
+	long length = proddet.length();
+	String prodstr = proddet.getSubString(1, (int)length);
+
+	si_product_details.setValue(prodstr);
+	lbhand.matchListboxItemsColumn(si_nominal_code_lb,stkrec.get("Nominal_Code"),1);
+
+	DecimalFormat df = new DecimalFormat("#.##");
+
+	costprice = new BigDecimal(stkrec.get("Cost_Price"));
+	si_cost_price.setValue(costprice);
+
+	sellingp = new BigDecimal(stkrec.get("Selling_Price"));
+	si_selling_price.setValue(sellingp);
+
+	si_units_newfield10.setValue(kiboo.checkNullString(stkrec.get("NewField10")));
+	//lbhand.matchListboxItems(si_units_newfield10,units_nf10);
+	
+	billyou_nf9 = stkrec.get("NewField9");
+	billyou_nf9 = (billyou_nf9 == null) ? 1 : (billyou_nf9.equals("YES")) ? 0 : 1;
+	si_billclient.setSelectedIndex(billyou_nf9);
+	
+	si_lor_newfield8.setValue(kiboo.checkNullString(stkrec.get("NewField8")));
+	si_casnumber_newfield7.setValue(kiboo.checkNullString(stkrec.get("NewField7")));
+	
+	// 16/07/2012: pre-conditioning method - for BS tests - req by Zakiah
+	si_precondmethod_field6.setValue(kiboo.checkNullString(stkrec.get("NewField6")));
+
+	// 09/08/2012: show stock-id and form-keeper-id
+	si_id.setValue( stkrec.get("ID").toString() );
+	si_formkeeper_newfield5.setValue( kiboo.checkNullString(stkrec.get("NewField5")) );
+*/
 
 ]]>
 </zscript>
