@@ -10,17 +10,16 @@
 <zscript src="../alsglobal/doculink_funcs.zs" />
 <zscript>
 <![CDATA[
-MYVERSION = "v2.0";
+MYVERSION = "i2.1";
 /*
-Title : Allow lab/reporting staff to upload scanned COA - capture upload date as real-completed.
-		No fake job-complete date now.
-
-Coding began date	: 1/6/2010
-Developers			: Victor Wong
+@Title Allow lab/reporting staff to upload scanned COA - capture upload date as real-completed. No fake job-complete date now.
+@Since 1/6/2010
+@Author Victor Wong
 
 29/09/2011: some optimization and enhancement(find by folder#)
 15/11/2010: remove branch checking
 28/03/2012: port to byte-compiled funcs
+07/11/2014: some modif for ALSI
 */
 
 import java.util.*;
@@ -34,12 +33,8 @@ myincludeid = Executions.getCurrent().getParameter("myid");
 useraccessobj = sechand.getUserAccessObject();
 if(useraccessobj == null) Executions.sendRedirect(MAINLOGIN_PAGE);
 
-kiboo = new Generals();
-sqlhand = new SqlFuncs();
-lbhand = new ListboxHandler();
-guihand = new GuiFuncs();
-samphand = new SampleReg();
-luhand = new LookupFuncs();
+kiboo = new Generals(); sqlhand = new SqlFuncs(); lbhand = new ListboxHandler(); guihand = new GuiFuncs();
+samphand = new SampleReg(); luhand = new LookupFuncs(); ngfun = new NGfuncs();
 
 documentLinkObj documentLinkProp = new documentLinkObj();
 
@@ -91,16 +86,15 @@ Object[] folders_lb_headers = {
 void startFolderJobsSearch(int itype)
 {
 	sdate = kiboo.getDateFromDatebox(startdate);
-    edate = kiboo.getDateFromDatebox(enddate);
-	cnm = kiboo.replaceSingleQuotes(customer_tb.getValue());
-	foldno = kiboo.replaceSingleQuotes(folderno_tb.getValue());
-	sampid = kiboo.replaceSingleQuotes(sampleid_tb.getValue());
-
+	edate = kiboo.getDateFromDatebox(enddate);
+	cnm = kiboo.replaceSingleQuotes(customer_tb.getValue().trim());
+	foldno = kiboo.replaceSingleQuotes(folderno_tb.getValue().trim());
+	sampid = kiboo.replaceSingleQuotes(sampleid_tb.getValue().trim());
 	last_searchtype = itype;
 
 	Listbox newlb = lbhand.makeVWListbox(folders_searchdiv, folders_lb_headers, "folderjobs_lb", 5);
 
-    sql = sqlhand.als_mysoftsql();
+	sql = sqlhand.als_mysoftsql();
 	if(sql == null) return;
 
 	// 29/3/2010: check branch
@@ -143,7 +137,9 @@ void startFolderJobsSearch(int itype)
 			break;
 	}
 
-	sqlstm += "and jobfolders.deleted=0 and jobfolders.folderstatus in ('" + FOLDERCOMMITED + "') and jobsamples.deleted=0 " + branch_str;
+	// 07/11/2014: modif for ALSI, LOGGED and COMMITTED folders show
+
+	sqlstm += "and jobfolders.deleted=0 and jobfolders.folderstatus in ('" + FOLDERCOMMITED + "','" + FOLDERLOGGED + "') and jobsamples.deleted=0 " + branch_str;
 	sqlstm += " group by jobfolders.origid, jobfolders.ar_code, jobfolders.datecreated, jobfolders.folderstatus, jobfolders.branch," + 
 			"jobfolders.duedate, jobfolders.coaprintdate, jobfolders.coadate, " + 
 			"customer.customer_name, cashsales_customerinfo.customer_name";
@@ -156,18 +152,17 @@ void startFolderJobsSearch(int itype)
 	// newlb.addEventListener("onSelect", new folderjobslb_Listener());
 
 	total_numsamples = 0;
+	ArrayList kabom = new ArrayList();
 
 	for(ilist : tlist)
 	{
-		ArrayList kabom = new ArrayList();
-
 		iorigid = ilist.get("origid");
 
 		kabom.add(iorigid.toString());
 
 		folderbranch = ilist.get("branch");
-		folderprefix = kiboo.folderPrefixByBranch(folderbranch);
-		folderstr = folderprefix + kiboo.padZeros5(iorigid);
+		//folderprefix = kiboo.folderPrefixByBranch(folderbranch);
+		folderstr = "ALSI" + kiboo.padZeros5(iorigid);
 
 		kabom.add(folderstr);
 		kabom.add(ilist.get("datecreated").toString().substring(0,10));
@@ -217,8 +212,9 @@ void startFolderJobsSearch(int itype)
 		kabom.add(icompanyname);
 		kabom.add(ilist.get("folderstatus"));
 		kabom.add(ilist.get("branch"));
-		strarray = kiboo.convertArrayListToStringArray(kabom);
-		lbhand.insertListItems(newlb,strarray,JOBFOLDERS_PREFIX,"");
+
+		lbhand.insertListItems(newlb,kiboo.convertArrayListToStringArray(kabom),JOBFOLDERS_PREFIX,"");
+		kabom.clear();
 	}
 
 	// 8/3/2010: hardcoded numofsamples_lbl def in UI section. To show total number of samples collected
@@ -269,12 +265,9 @@ void updateCOADateClick()
 	todaydate = kiboo.getDateFromDatebox(hiddendatebox);
 
 	samphand.updateJobFolder_COADate(iorigid, todaydate);
-
-	// 19/10/2011: disable for now
-	//updateJobFolder_labfolderstatus(iorigid,FOLDERRELEASED); // FOLDERRELEASED def in alsglobaldefs.zs
+	samphand.updateJobFolder_labfolderstatus(iorigid,FOLDERRELEASED); // 07/11/2014: for ALSI
 
 	guihand.showMessageBox("Ka-ching. COA release-date captured");
-
 	startFolderJobsSearch(last_searchtype); // refresh
 }
 
@@ -329,39 +322,39 @@ void kasiExport_clicker()
 </zscript>
 
 <popup id="adminchgcoadate_popup">
-<groupbox>
-<caption label="Change COA release date" />
-	<vbox>
-		<label id="accd_folder_lbl" />
-		<datebox id="accd_datebox" format="yyyy-MM-dd" />
-		<separator height="3px" />
-		<label value="**USED IN EXTREME CASES ONLY**" />
-		<separator height="5px" />		
-		<hbox>
-			<button label="Change" style="font-size:9px" onClick="adminchgcoadate_clicker()" />
-			<button label="Remove date" style="font-size:9px" onClick="adminremovecoadate_clicker()" />
-			<button label="Close" style="font-size:9px" onClick="adminchgcoadate_popup.close()" />
-		</hbox>
-	</vbox>
-</groupbox>
+	<groupbox>
+	<caption label="Change COA release date" />
+		<vbox>
+			<label id="accd_folder_lbl" />
+			<datebox id="accd_datebox" format="yyyy-MM-dd" />
+			<separator height="3px" />
+			<label value="**USED IN EXTREME CASES ONLY**" />
+			<separator height="5px" />		
+			<hbox>
+				<button label="Change" style="font-size:9px" onClick="adminchgcoadate_clicker()" />
+				<button label="Remove date" style="font-size:9px" onClick="adminremovecoadate_clicker()" />
+				<button label="Close" style="font-size:9px" onClick="adminchgcoadate_popup.close()" />
+			</hbox>
+		</vbox>
+	</groupbox>
 </popup>
-<!-- end of admin change COA date popup -->
 
 <popup id="doculink_popup">
-<groupbox width="400px">
-	<include id="linkingdoc_include" src="alsglobal/doculink.zul"/>
-	<separator height="5px" />
-	<hbox>
-		<button label="Close" onClick="doculink_popup.close()" style="font-size:9px" />
-	</hbox>
-</groupbox>
+	<groupbox width="400px">
+		<include id="linkingdoc_include" src="alsglobal/doculink.zul"/>
+		<separator height="5px" />
+		<hbox>
+			<button label="Close" onClick="doculink_popup.close()" style="font-size:9px" />
+		</hbox>
+	</groupbox>
 </popup>
-<!-- end of document management popup -->
+
+<style src="/real-world.css" />
 
 <div width="1200px">
 <panel id="updatecoarealdate_panel" title="Update COA release date ${MYVERSION}" border="normal" collapsible="true" closable="true">
 <panelchildren>
-<datebox id="hiddendatebox" format="yyyy-MM-dd" visible="false" onCreate="self.value = new Date()" />
+<datebox id="hiddendatebox" format="yyyy-MM-dd" visible="false" onCreate="kiboo.setTodayDatebox(self)" />
 <vbox>
 
 <groupbox mold="3d" width="100%">
@@ -370,9 +363,9 @@ void kasiExport_clicker()
 	<rows>
 		<row>
 			<label value="Start date" style="font-size:9px" />
-			<datebox id="startdate" style="font-size:9px" format="yyyy-MM-dd" />
+			<datebox id="startdate" style="font-size:9px" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
 			<label value="End date" style="font-size:9px" />
-			<datebox id="enddate" style="font-size:9px" format="yyyy-MM-dd" />
+			<datebox id="enddate" style="font-size:9px" format="yyyy-MM-dd" onCreate="kiboo.setTodayDatebox(self)" />
 			<button label="Search/Refresh" style="font-size:9px" onClick="startFolderJobsSearch(1)" />
 		</row>
 		<row spans=",4">
@@ -431,10 +424,6 @@ void kasiExport_clicker()
 <zscript>
 <![CDATA[
 
-kiboo.setTodayDatebox(startdate);
-kiboo.setTodayDatebox(enddate);
-kiboo.setTodayDatebox(hiddendatebox);
-
 lbhand.populateDropdownListbox(branch_drd, dd_branches);
 
 // if user is admin - can see other shits
@@ -452,7 +441,7 @@ if(!sechand.check_UsergroupAccess(useraccessobj.origid,REPORTGEN_USERGROUP,3))
 
 // 29/09/2011: only username able to change coa-release-date
 username = useraccessobj.username;
-if(username.equals("aik")) adminchgcoadate_btn.setVisible(true);
+if(username.equals("wcfoong")) adminchgcoadate_btn.setVisible(true);
 
 documentLinkProp.document_idprefix = "DOCS";
 setDocumentLink_DynamicProperty(linkingdoc_include, documentLinkProp, useraccessobj);
